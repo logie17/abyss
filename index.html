@@ -1,0 +1,88 @@
+<html>
+  <body>
+    <div class="container">
+      <canvas id="wave" width="500" height="500"> </canvas>
+    </div>
+  </body>
+</html>
+<script>
+
+let points = [];
+const drawWave = _ => {
+  const canvas = document.getElementById('wave');
+  ctx = canvas.getContext('2d');
+  const width = canvas.width;
+  const height = canvas.height;
+
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = '#FF0000';
+
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  for (let x = 0; x < 256; x++) {
+    ctx.lineTo(x * 10, 100 + points[x]);
+    ctx.stroke()
+    //ctx.fillRect(x * 10, 100 + points[x], 5, 5);
+    ctx.moveTo(x * 10, 100 + points[x]);
+  }
+
+}
+
+async function recordMic() {
+  let stream = null;
+
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: true,
+    });
+    /* use the stream */
+  } catch(err) {
+    debugger;
+    /* handle the error */
+  }
+
+  var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  var source = audioCtx.createMediaStreamSource(stream);
+
+  try {
+    await audioCtx.audioWorklet.addModule('http://localhost:8000/pcm-processor.js');
+  } catch(e) {
+    console.error("Doh", e);
+  }
+
+  const pcmProcessor = new AudioWorkletNode(audioCtx, 'pcm-processor')
+  source.connect(pcmProcessor);
+
+  drawWave();
+  setInterval(_ => {
+    drawWave();
+  }, 40);
+  pcmProcessor.port.onmessage = (e) => {
+    if (e.data.eventType === 'data') {
+      const audioData = e.data.audioBuffer;
+      if (points.length === 256) {
+        points.shift();
+      }
+      points.push(audioData * 1000);
+    }
+
+    if (e.data.eventType === 'stop') {
+      // recording has stopped
+    }
+  };
+
+  pcmProcessor.connect(audioCtx.destination);
+
+  /* pcmProcessor.parameters.get('isRecording').setValueAtTime(1, 5);
+   * pcmProcessor.parameters.get('isRecording').setValueAtTime(
+   *   0,
+   *   time + duration
+   * ); */
+  //source.start();
+}
+
+window.addEventListener('DOMContentLoaded', async e => {
+  await recordMic()
+});
+
+</script>
