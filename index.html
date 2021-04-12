@@ -2,6 +2,8 @@
   <body>
     <div class="container">
       <canvas id="wave" width="500" height="500"> </canvas>
+
+      <button onclick="startRecording()">Start recording</button>
     </div>
   </body>
 </html>
@@ -35,10 +37,8 @@ async function recordMic() {
     stream = await navigator.mediaDevices.getUserMedia({
       audio: true,
     });
-    /* use the stream */
   } catch(err) {
-    debugger;
-    /* handle the error */
+    console.log("There was an error", err);
   }
 
   var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -51,6 +51,7 @@ async function recordMic() {
   }
 
   const pcmProcessor = new AudioWorkletNode(audioCtx, 'pcm-processor')
+
   source.connect(pcmProcessor);
 
   drawWave();
@@ -63,6 +64,7 @@ async function recordMic() {
       if (points.length === 256) {
         points.shift();
       }
+
       points.push(audioData * 1000);
     }
 
@@ -73,16 +75,21 @@ async function recordMic() {
 
   pcmProcessor.connect(audioCtx.destination);
 
-  /* pcmProcessor.parameters.get('isRecording').setValueAtTime(1, 5);
-   * pcmProcessor.parameters.get('isRecording').setValueAtTime(
-   *   0,
-   *   time + duration
-   * ); */
-  //source.start();
+  return pcmProcessor;
+
+}
+
+async function startRecording(e) {
+  console.log("Starting to record");
+
+  const pcmProcessor = await recordMic()
+  pcmProcessor.parameters.get('isRecording').setValueAtTime(1, 0);
+
+
+
 }
 
 window.addEventListener('DOMContentLoaded', async e => {
-  await recordMic()
 });
 
 </script>

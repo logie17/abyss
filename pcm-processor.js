@@ -2,7 +2,7 @@ class PcmProcessor extends AudioWorkletProcessor {
   static get parameterDescriptors() {
     return [{
       name: 'isRecording',
-      defaultValue: 1
+      defaultValue: 0
     }];
   }
 
@@ -63,6 +63,7 @@ class PcmProcessor extends AudioWorkletProcessor {
       dataIndex++
     ) {
       const shouldRecord = isRecordingValues[dataIndex] === 1;
+
       if (!shouldRecord && !this._isBufferEmpty()) {
         this._flush();
         this._recordingStopped();
