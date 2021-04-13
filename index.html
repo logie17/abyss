@@ -19,7 +19,6 @@ const dpr = window.devicePixelRatio || 1;
 const padding = 10;
 canvas.width = canvas.offsetWidth * dpr;
 
-debugger;
 canvas.height = (canvas.offsetHeight + padding * 2) * dpr;
 //ctx.scale(dpr, dpr);
 ctx.translate(0, canvas.offsetHeight / 2 + padding);
@@ -54,10 +53,40 @@ async function recordMic() {
     console.log("There was an error", err);
   }
 
-  if (stream) {
-    var track = stream.getAudioTracks()[0];
-    var stream = new MediaStream([localAudio.track]);
+  let options = {
+    mimeType: "video/webm; codecs=vp9"
+  };
+  console.log(options);
+  var mediaRecorder = new MediaRecorder(stream, options);
+
+  mediaRecorder.ondataavailable = handleDataAvailable;
+  mediaRecorder.start();
+
+  setTimeout(() => {
+    console.log("stopping");
+    mediaRecorder.stop();
+  }, 3000);
+
+  let recordedChunks = [];
+  async function handleDataAvailable(event) {
+    console.log("data-available");
+    if (event.data.size > 0) {
+      recordedChunks.push(event.data);
+      console.log(recordedChunks);
+      await download();
+    } else {
+      // ...
+    }
   }
+
+  async function download() {
+    var audio = await (new Blob(recordedChunks, {
+      type: "video/webm"
+    })).arrayBuffer();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioCtx.decodeAudioData(audio)
+  }
+
 
   var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   var source = audioCtx.createMediaStreamSource(stream);
