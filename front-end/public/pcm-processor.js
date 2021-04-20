@@ -75,7 +75,7 @@ class PcmProcessor extends AudioWorkletProcessor {
           audioBuffer: inputs[0][0][dataIndex],
         });
 
-       this._appendToBuffer(inputs[0][0][dataIndex]);
+//       this._appendToBuffer(inputs[0][0][dataIndex]);
       }
     }
 

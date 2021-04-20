@@ -1,5 +1,5 @@
 import { Track } from './track';
-import { PcmProcessor } from './pcmprocessor';
+import { AudioAnalyser } from './audioanalyser';
 export class Recorder {
   constructor() {
 
@@ -59,11 +59,11 @@ export class Recorder {
       throw new Error(`_recordFromMic: Unable to get access to media device: ${err}`);
     }
 
-    this._mediaRecorder = new MediaRecorder(stream);
+    // this._mediaRecorder = new MediaRecorder(stream);
 
-    this._mediaRecorder.ondataavailable = this._handleDataAvailable;
-    this._mediaRecorder.onstop = this._handleOnStop;
-    this._mediaRecorder.start();
+    // this._mediaRecorder.ondataavailable = this._handleDataAvailable;
+    // this._mediaRecorder.onstop = this._handleOnStop;
+    // this._mediaRecorder.start();
 
     return stream;
   }
@@ -74,23 +74,22 @@ export class Recorder {
 
     const stream = await this._recordFromMic();
 
-    const pcmProcessor = new PcmProcessor(stream);
-    await pcmProcessor.init();
-    pcmProcessor.start();
-
-    return pcmProcessor;
+    this._analyser = new AudioAnalyser(stream);
+    await this._analyser.init();
+    return this._analyser;
   }
 
   async stop() {
     if (this._mediaRecorder) {
       this._mediaRecorder.stop();
     }
+    if (this._analyser) {
+      this._analyser.stop();
+    }
   }
 
   onrecordingAvailable(cb) {
     this._onrecordingAvailible = cb;
   }
-
-
 
 }

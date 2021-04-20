@@ -4,11 +4,19 @@
     <div class="container">
       <div class="row">
         <div class="col-sm col-lg-10">
-          <canvas id="wave"> </canvas>
+          <div id="wave-container">
+            <canvas id="wave"> </canvas>
+            <div class="right" id="right"></div>
+          </div>
           <button
             @click="startRecording"
           >
             <span class="icon-mic"></span> Start recording
+          </button>
+          <button
+            @click="stopRecording"
+          >
+            <span class="icon-mic"></span> Stop recording
           </button>
         </div>
       </div>
@@ -38,53 +46,61 @@ export default {
   },
   methods: {
     async startRecording() {
-      const pcmProcessor = await this.recorder.begin();
-      let points = [];
+      const analyser = await this.recorder.begin();
 
-      const samples = 256;
       const canvas = document.getElementById('wave');
       let ctx = canvas.getContext('2d');
 
-      const dpr = window.devicePixelRatio || 1;
-      const padding = 10;
-      canvas.width = canvas.offsetWidth * dpr;
+      canvas.width = canvas.offsetWidth;
+      ctx.translate(0, canvas.offsetHeight / 2);
 
-      canvas.height = (canvas.offsetHeight + padding * 2) * dpr;
-      //ctx.scale(dpr, dpr);
-      ctx.translate(0, canvas.offsetHeight / 2 + padding);
+      let position = 0;
 
-      const drawWave = () => {
-        const width = canvas.width;
-        const height = canvas.height;
+      const drawWave = async (data) => {
+        const max = Math.max(...data.map(d => Number(d * 100/2) << 0))
+        const min = Math.min(...data.map(d => Number(d * 100/2) << 0))
 
-        ctx.clearRect(0, -height, width, height * 2);
-        ctx.fillStyle = '#FF0000';
+        if (position === canvas.width) {
+          position = 0;
+          var dataURL = canvas.toDataURL();
+          const container = document.getElementById('wave-container');
+          const right = document.getElementById('right');
+          let img = document.createElement('img');
 
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        for (let x = 0; x < samples; x++) {
-          //    console.log("points", points[x]);
-          ctx.lineTo(x * 10, points[x]);
-          ctx.stroke()
-          //ctx.fillRect(x * 10, 100 + points[x], 5, 5);
-          ctx.moveTo(x * 10, points[x]);
+          await new Promise(resolve => {
+            img.src = dataURL;
+            img.onload = () => {
+              resolve(true);
+            };
+            img.style.width = '500px';
+            img.style.zIndex = 1;
+            container.insertBefore(img, right);
+
+            ctx.clearRect(0, -canvas.height, canvas.width, canvas.height * 2);
+
+            let left = canvas.offsetLeft + 500;
+            canvas.style.left = left + 'px';
+            canvas.style.height = '100px';
+
+            position = 0;
+            container.scrollLeft += 500;
+          });
         }
+
+        ctx.fillRect(position, min, 4, max - min);
+        position = position + 4;
       }
 
-      drawWave();
-      setInterval(() => {
-        drawWave();
-      }, 20);
-      pcmProcessor.onDataAvailible(audioData => {
-        if (points.length === samples) {
-          points.shift();
-        }
 
-        points.push(audioData * 100);
-      });
+      this._drawWaveIn = setInterval(async() => {
+        const audioData = analyser.getData();
+        await drawWave(audioData);
+      }, 30);
+
     },
 
     stopRecording() {
+      clearInterval(this._drawWaveIn);
       this.recorder.stop();
     }
   }
@@ -92,9 +108,30 @@ export default {
 
 </script>
 <style scoped lang="scss">
-  canvas {
-    height: 100px;
-    width: 100%;
-    border: 1px solid red;
+  #wave-container {
+    display: flex;
+    overflow-x: scroll;
+    position: relative;
+
+    img {
+      width: 500px;
+      background-color: red;
+    }
+    div {
+      width: 20%;
+      height: 100px;
+    }
+
+    canvas {
+      background-color: transparent;
+      height: 100px;
+      width: 500px;
+      z-index: 200;
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      /*right: 20%;*/
+    }
   }
 </style>
