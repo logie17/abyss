@@ -60,8 +60,8 @@ export default {
         const max = Math.max(...data.map(d => Number(d * 100/2) << 0))
         const min = Math.min(...data.map(d => Number(d * 100/2) << 0))
 
-        if (position === canvas.width) {
-          position = 0;
+        if (position >= canvas.width) {
+          position = 1;
           var dataURL = canvas.toDataURL();
           const container = document.getElementById('wave-container');
           const right = document.getElementById('right');
@@ -73,6 +73,8 @@ export default {
               resolve(true);
             };
             img.style.width = '500px';
+            img.style.minWidth = '500px';
+            img.style.height = '100px';
             img.style.zIndex = 1;
             container.insertBefore(img, right);
 
@@ -87,8 +89,8 @@ export default {
           });
         }
 
-        ctx.fillRect(position, min, 4, max - min);
-        position = position + 4;
+        ctx.fillRect(position, min, 2, max - min);
+        position = position + 3;
       }
 
 
@@ -115,10 +117,12 @@ export default {
 
     img {
       width: 500px;
+      min-width: 500px;
       background-color: red;
     }
+
     div {
-      width: 20%;
+      /* width: 20%; */
       height: 100px;
     }
 
