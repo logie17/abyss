@@ -52,18 +52,20 @@ export default {
       let ctx = canvas.getContext('2d');
 
       canvas.width = canvas.offsetWidth;
-      ctx.translate(0, canvas.offsetHeight / 2);
+      canvas.height = canvas.offsetHeight;
+      ctx.translate(0, canvas.height/2);
 
       let position = 0;
 
       const drawWave = async (data) => {
         const max = Math.max(...data.map(d => Number(d * 100/2) << 0))
         const min = Math.min(...data.map(d => Number(d * 100/2) << 0))
+          const container = document.getElementById('wave-container');
 
         if (position >= canvas.width) {
-          position = 1;
+          position = position - 500;
+//          position = 2;
           var dataURL = canvas.toDataURL();
-          const container = document.getElementById('wave-container');
           const right = document.getElementById('right');
           let img = document.createElement('img');
 
@@ -84,12 +86,14 @@ export default {
             canvas.style.left = left + 'px';
             canvas.style.height = '100px';
 
-            position = 0;
-            container.scrollLeft += 500;
+            //position = 0;
+            /* container.scrollLeft += 500; */
           });
         }
 
-        ctx.fillRect(position, min, 2, max - min);
+        // debugger eslint-disable-line
+        ctx.fillRect(position, -1 * ((max - min)/2), 2, max - min);
+        container.scrollLeft += 3;
         position = position + 3;
       }
 
@@ -122,7 +126,7 @@ export default {
     }
 
     div {
-      /* width: 20%; */
+      width: 20%;
       height: 100px;
     }
 
