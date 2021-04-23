@@ -60,10 +60,10 @@ export default {
       const drawWave = async (data) => {
         const max = Math.max(...data.map(d => Number(d * 100/2) << 0))
         const min = Math.min(...data.map(d => Number(d * 100/2) << 0))
-          const container = document.getElementById('wave-container');
+        const container = document.getElementById('wave-container');
 
         if (position >= canvas.width) {
-          position = position - 500;
+          position = position - 1000;
 //          position = 2;
           var dataURL = canvas.toDataURL();
           const right = document.getElementById('right');
@@ -74,24 +74,21 @@ export default {
             img.onload = () => {
               resolve(true);
             };
-            img.style.width = '500px';
-            img.style.minWidth = '500px';
+            img.style.width = '1000px';
+            img.style.minWidth = '1000px';
             img.style.height = '100px';
             img.style.zIndex = 1;
             container.insertBefore(img, right);
 
             ctx.clearRect(0, -canvas.height, canvas.width, canvas.height * 2);
 
-            let left = canvas.offsetLeft + 500;
+            let left = canvas.offsetLeft + 1000;
             canvas.style.left = left + 'px';
             canvas.style.height = '100px';
 
-            //position = 0;
-            /* container.scrollLeft += 500; */
           });
         }
 
-        // debugger eslint-disable-line
         ctx.fillRect(position, -1 * ((max - min)/2), 2, max - min);
         container.scrollLeft += 3;
         position = position + 3;
@@ -101,7 +98,7 @@ export default {
       this._drawWaveIn = setInterval(async() => {
         const audioData = analyser.getData();
         await drawWave(audioData);
-      }, 30);
+      }, 40);
 
     },
 
@@ -120,8 +117,8 @@ export default {
     position: relative;
 
     img {
-      width: 500px;
-      min-width: 500px;
+      width: 1000px;
+      min-width: 1000px;
       background-color: red;
     }
 
@@ -133,7 +130,7 @@ export default {
     canvas {
       background-color: transparent;
       height: 100px;
-      width: 500px;
+      width: 1000px;
       z-index: 200;
       position: absolute;
       top: 0;
